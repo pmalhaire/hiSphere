@@ -13,7 +13,7 @@ CXXFLAGS += $(shell pkg-config --cflags sdl2)
 LIBS += $(shell pkg-config --libs sdl2)
 
 #LIBS += -lglut
-#LDFLAGS += 
+#LDFLAGS +=
 #CXXFLAGS += -Ifreeglut-native-gles/include/
 #LIBS += -Lfreeglut-native-gles/lib/
 #LIBS += -lfreeglut-gles -lGLESv2
@@ -25,6 +25,9 @@ LD = $(CXX)
 game.o: game.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
 
+sphere.o: sphere.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
+
 main.o: main.cpp
 	echo $(CXX)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
@@ -32,7 +35,7 @@ main.o: main.cpp
 main.html: main.o game.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-main: main.o game.o
+main: main.o game.o sphere.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 clean:

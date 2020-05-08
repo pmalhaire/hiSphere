@@ -6,6 +6,7 @@
 #include <cassert>
 
 #include "game.hpp"
+#include "sphere.h"
 
 #define enum_case(str)                                                         \
   case str:                                                                    \
@@ -34,10 +35,26 @@ public:
   virtual void draw() = 0;
 };
 
+void create_circle(GLfloat *circle_vertices, const int vertex_count) {
+  int idx = 0;
+  for (float i = 0.0f; i < 2 * M_PI;
+       i += 2.0 * M_PI / static_cast<float>(vertex_count)) {
+    circle_vertices[idx] = cos(i);
+    circle_vertices[idx + 1] = sin(i);
+    circle_vertices[idx + 2] = 0.0;
+#ifdef DEBUG
+    printf("i:%f idx:%d x:%f,y:%f,z:%f\n", i, idx, circle_vertices[idx],
+           circle_vertices[idx + 1], circle_vertices[idx + 2]);
+#endif
+    idx += 3;
+  }
+}
+
 class game_impl3 : public game_impl {
 
-  GLuint program_object_, vbuffer_;
-
+  GLuint program_object_, circle_vertex_buffer, sphere_vertex_buffer;
+  Sphere sphere;
+  const int n_vertex = 50;
   GLuint LoadShader(GLenum type, const char *shaderSrc) {
     GLuint shader;
     GLint compiled;
@@ -69,7 +86,7 @@ class game_impl3 : public game_impl {
   ///
   // Initialize the shader and program object
   //
-#define N_VERT 50
+
   bool Init() {
     const char vShaderStr[] = "attribute vec4 vPosition;   \n"
                               "void main()                 \n"
@@ -119,24 +136,25 @@ class game_impl3 : public game_impl {
 
     // Store the program object
     program_object_ = programObject;
-    GLfloat vVertices[N_VERT * 3] = {};
+    sphere.set(1.0f, 20, 20, true);
+    // GLfloat circle_vertices[n_vertex * 3] = {};
+    // create_circle(circle_vertices, n_vertex);
+    // glGenBuffers(1, &circle_vertex_buffer);
+    // GL_ERR_CHECK;
+    // glBindBuffer(GL_ARRAY_BUFFER, circle_vertex_buffer);
+    // GL_ERR_CHECK;
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(circle_vertices), circle_vertices,
+    //              GL_STATIC_DRAW);
+    // GL_ERR_CHECK;
 
-    int idx = 0;
-    for (float i = 0.0f; i < 2 * M_PI; i += 2.0 * M_PI / N_VERT) {
-      vVertices[idx] = cos(i);
-      vVertices[idx + 1] = sin(i);
-      vVertices[idx + 2] = 0.0;
-      printf("i:%f idx:%d x:%f,y:%f,z:%f\n", i, idx, vVertices[idx],
-             vVertices[idx + 1], vVertices[idx + 2]);
-      idx += 3;
-    }
+    glGenBuffers(1, &sphere_vertex_buffer);
+    GL_ERR_CHECK;
+    glBindBuffer(GL_ARRAY_BUFFER, sphere_vertex_buffer);
+    GL_ERR_CHECK;
+    glBufferData(GL_ARRAY_BUFFER, sphere.getVertexSize() * sizeof(GLfloat),
+                 sphere.getVertices(), GL_STATIC_DRAW);
+    GL_ERR_CHECK;
 
-    glGenBuffers(1, &vbuffer_);
-    GL_ERR_CHECK;
-    glBindBuffer(GL_ARRAY_BUFFER, vbuffer_);
-    GL_ERR_CHECK;
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vVertices), vVertices, GL_STATIC_DRAW);
-    GL_ERR_CHECK;
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     GL_ERR_CHECK;
     return true;
@@ -151,16 +169,28 @@ class game_impl3 : public game_impl {
     glUseProgram(program_object_);
     GL_ERR_CHECK;
 
+    // // Bind the vertex buffer
+    // glBindBuffer(GL_ARRAY_BUFFER, circle_vertex_buffer);
+    // GL_ERR_CHECK;
+
+    // // Load the vertex data
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    // GL_ERR_CHECK;
+    // glEnableVertexAttribArray(0);
+    // GL_ERR_CHECK;
+    // glDrawArrays(GL_LINE_LOOP, 0, n_vertex);
+    // GL_ERR_CHECK;
+    // glEnable(GL_DEPTH_TEST);
     // Bind the vertex buffer
-    glBindBuffer(GL_ARRAY_BUFFER, vbuffer_);
+    glBindBuffer(GL_ARRAY_BUFFER, sphere_vertex_buffer);
     GL_ERR_CHECK;
 
     // Load the vertex data
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     GL_ERR_CHECK;
     glEnableVertexAttribArray(0);
     GL_ERR_CHECK;
-    glDrawArrays(GL_LINE_LOOP, 0, N_VERT);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<int>(sphere.getVertexCount()));
     GL_ERR_CHECK;
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
