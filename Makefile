@@ -32,7 +32,7 @@ main.o: main.cpp
 	echo $(CXX)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
 
-main.html: main.o game.o
+main.html: main.o game.o sphere.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 main: main.o game.o sphere.o
@@ -40,6 +40,7 @@ main: main.o game.o sphere.o
 
 clean:
 	rm -f game.o
+	rm -f sphere.o
 	rm -f main.o
 	rm -f main.js
 	rm -f main.html
